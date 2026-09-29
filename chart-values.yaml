@@ -1,0 +1,24 @@
+# Values for the shared chart, oci://ghcr.io/bo-jr/charts/service.
+#
+# chartVersion pins the chart by exact version: rendering these values with any
+# other chart version fails. image.digest is supplied at render time — by CI
+# from Phase 3, by `task sandbox:deploy` in bo-platform before that — and is
+# never committed here.
+chartVersion: 0.1.0
+name: storefront
+version: v1
+image:
+  repository: ghcr.io/bo-jr/bo-storefront
+  digest: ""
+workload: Deployment
+replicas: 1
+# Declared, not discovered: feeds /readyz now and the Istio allow rules in Phase 5.
+dependencies: [catalog, pricing]
+env:
+  FAILURE_RATE: "0"
+  EXTRA_LATENCY_MS: "0"
+secretEnv: []
+otlpEndpoint: ""
+resources:
+  requests: { cpu: 50m,  memory: 64Mi }
+  limits:   { cpu: 500m, memory: 128Mi }
