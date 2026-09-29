@@ -2,9 +2,11 @@
 
 Source for the `storefront` service. **Source only** — no manifests live here.
 
-Canonical spec: [`bo-platform/docs/BUILD-PLAN.md`](https://github.com/bo-jr/bo-platform/blob/main/docs/BUILD-PLAN.md)
+Canonical spec: [`bo-platform/BUILD-PLAN.md`](https://github.com/bo-jr/bo-platform/blob/main/BUILD-PLAN.md)
 §4 (layout), Phase 2 (the service), Phase 6 (the milestone).
 Read the relevant phase before writing anything.
+Where it and [`bo-platform/DECISIONS.md`](https://github.com/bo-jr/bo-platform/blob/main/DECISIONS.md)
+disagree, `DECISIONS.md` wins.
 
 ## What this service is
 
@@ -60,7 +62,7 @@ chart-values.yaml             # values for the shared chart
 Istio `AuthorizationPolicy`, the `readyz` dependency checks, and the ServiceMonitor from
 that list. Under default-deny, forgetting a dependency is an outage — declare them.
 
-Pin `bo-service-chart` **by exact version**. An unpinned chart edit silently changes all
+Pin `bo-service-chart` **by exact version** — the `chartVersion:` field of `chart-values.yaml`. An unpinned chart edit silently changes all
 three services' manifests at once.
 
 ## What must never live here
@@ -78,15 +80,15 @@ Deployments and Discord messages, where cardinality is free.
 
 - **No floating tags. Ever.** Not `latest`, `lts`, `stable`, or partial semver (`:1`,
   `:1.2`). Images pinned by **manifest-list digest**, charts by exact semver.
-- **Pin the index digest, never a per-arch digest.** A platform-specific digest pulls
-  fine on one machine and fails `no match for platform` on the other. This is the most
-  likely portability bug in the lab.
-- **Cross-platform, always.** Everything must work on `darwin/arm64` (MacBook, the
-  runtime target) and `linux/amd64` (Windows/WSL2, build and test only). Images build
-  `linux/amd64,linux/arm64`.
+- **Pin the index digest, never a per-arch digest.** GitHub Actions runners are
+  `linux/amd64`; every cluster in the lab is `arm64`. A platform-specific digest pulls
+  fine where you tested it and fails `no match for platform` on the other side of that
+  boundary. This is the most likely portability bug in the lab.
+- **Images build `linux/amd64,linux/arm64`.** The amd64 leg is what CI tests against;
+  the arm64 leg is what actually deploys. The lab itself runs only on `darwin/arm64`.
 - **LF line endings**, enforced by `.gitattributes`. A CRLF `.sh` inside a Linux image
   fails as `bad interpreter: /bin/bash^M`.
 - **When something fails, check architecture first** — the usual cause of
   `ImagePullBackOff` and `exec format error` here.
 - If reality contradicts the plan, **stop and say so.** Do not improvise around it;
-  record the outcome in `bo-platform/docs/DECISIONS.md`.
+  record the outcome in `bo-platform/DECISIONS.md`.
